@@ -1,0 +1,18 @@
+{
+  "name": "openclaw-exposure-guard",
+  "version": "0.1.0",
+  "description": "Read-only checker for OpenClaw AI-agent server exposure, vulnerable versions, risky configs, and credential-adjacent surfaces.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "openclaw-exposure-guard": "./bin/openclaw-exposure-guard.js"
+  },
+  "scripts": {
+    "scan": "node bin/openclaw-exposure-guard.js",
+    "smoke": "node bin/openclaw-exposure-guard.js --help",
+    "test": "node --check bin/openclaw-exposure-guard.js && node --check src/scanner.js && node test/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

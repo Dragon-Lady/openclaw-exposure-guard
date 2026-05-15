@@ -1,0 +1,30 @@
+[
+  {
+    "id": "GHSA-g55j-c2v4-pjcg",
+    "title": "Unauthenticated local RCE via WebSocket config.apply",
+    "severity": "high",
+    "fixedVersion": "2026.1.20",
+    "url": "https://advisories.gitlab.com/npm/openclaw/GHSA-g55j-c2v4-pjcg/"
+  },
+  {
+    "id": "GHSA-g27f-9qjv-22pm",
+    "title": "Log poisoning via WebSocket headers",
+    "severity": "medium",
+    "fixedVersion": "2026.2.13",
+    "url": "https://advisories.gitlab.com/npm/openclaw/GHSA-g27f-9qjv-22pm/"
+  },
+  {
+    "id": "GHSA-cv7m-c9jx-vg7q",
+    "title": "Path traversal in browser upload allows local file read",
+    "severity": "high",
+    "fixedVersion": "2026.2.14",
+    "url": "https://github.com/advisories/GHSA-cv7m-c9jx-vg7q"
+  },
+  {
+    "id": "GHSA-m3mh-3mpg-37hw",
+    "title": "Local plugin/hook install-time command execution through .npmrc git override",
+    "severity": "high",
+    "fixedVersion": "2026.3.24",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-m3mh-3mpg-37hw"
+  }
+]
