@@ -37,6 +37,9 @@ node .\bin\openclaw-exposure-guard.js --json C:\path\to\check
 - OpenClaw skill or hook metadata files.
 - Plugin/hook install-surface risks such as `.npmrc` `git=` overrides.
 - Config patterns that appear to bind services publicly or disable auth.
+- Email-agent policy patterns that combine inbox access, outbound-send
+  capability, and sensitive-data access without clear identity, first-time
+  external recipient, and human-approval gates.
 - TCP listeners bound to all interfaces.
 - Credential-adjacent file names, reported by path only.
 

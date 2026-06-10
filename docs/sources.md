@@ -18,6 +18,18 @@ material. It should be updated only with precise, reviewable indicators.
   `.npmrc` `git=` override, fixed in `2026.3.24`.
   <https://github.com/openclaw/openclaw/security/advisories/GHSA-m3mh-3mpg-37hw>
 
+## Agent Phishing / Social-Trust Research
+
+- Varonis Threat Labs, "Phishing for Lobsters: How We Tricked OpenClaw into
+  Spilling Secrets" (2026-06-09): OpenClaw email-agent simulations leaked AWS,
+  database, SSH, and CRM/customer-export data when plausible urgent or routine
+  requests bypassed sender identity verification.
+  <https://www.varonis.com/blog/openclaw-phishing>
+- BleepingComputer, "OpenClaw AI agent found falling for phishing attacks,
+  spills user data" (2026-06-09): summary of the Varonis OpenClaw phishing
+  simulations and recommended controls.
+  <https://www.bleepingcomputer.com/news/security/openclaw-ai-agent-found-falling-for-phishing-attacks-spills-user-data/>
+
 ## Triage Rules
 
 - Prefer exact package names, affected ranges, fixed versions, paths, hashes,
@@ -25,4 +37,7 @@ material. It should be updated only with precise, reviewable indicators.
 - Do not add broad scary strings as findings.
 - Keep remote-exposure checks local unless the operator explicitly asks for a
   scoped network assessment.
+- For agent-phishing checks, prefer architecture/control signals such as inbox
+  access, outbound-send capability, sensitive-data connectors, identity
+  verification, first-time external recipient gating, and human approval.
 - Do not add exploit logic.

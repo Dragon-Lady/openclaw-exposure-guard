@@ -39,6 +39,15 @@ const CREDENTIAL_ADJACENT = [
   "token.json",
 ];
 
+const AGENT_POLICY_NAMES = new Set([
+  "agents.md",
+  "agent.md",
+  "agents.json",
+  "agent.json",
+  "openclaw.agents.md",
+  "openclaw.agents.json",
+]);
+
 async function scan(target) {
   const report = {
     target,
@@ -81,11 +90,49 @@ function inspectFile(file, report) {
   if (lower === "package.json") inspectPackage(file, report);
   if (lower === ".npmrc") inspectNpmrc(file, report);
   if (CONFIG_NAMES.has(lower)) inspectConfig(file, report);
+  if (AGENT_POLICY_NAMES.has(lower)) inspectAgentPolicy(file, report);
   if (lower === "skill.md" || lower === "hook.md") {
     add(report, "info", "openclaw-extension-surface", "OpenClaw skill or hook metadata found; review this directory before trusting it.", file);
   }
   if (CREDENTIAL_ADJACENT.includes(lower)) {
     add(report, "info", "credential-adjacent-path", "Credential-adjacent file name observed. The guard reports the path only and does not read or print secrets.", file);
+  }
+}
+
+function inspectAgentPolicy(file, report) {
+  let text = "";
+  try {
+    text = fs.readFileSync(file, "utf8");
+  } catch {
+    return;
+  }
+
+  const emailAccess = /\b(gmail|google\s+workspace|inbox|email|mailbox)\b/i.test(text);
+  const outboundMail = /\b(send|forward|reply|email)\b.{0,80}\b(email|mail|message|recipient|external)\b/i.test(text);
+  const sensitiveAccess = /\b(aws|iam|ssh|database|db\s+credential|credential|secret|token|crm|customer\s+export|customer\s+records?|contract|revenue|qbr)\b/i.test(text);
+  const identityGate = /\b(verify|validate|confirm|authenticate)\b.{0,80}\b(sender|identity|requester|colleague|employee|domain|address)\b/i.test(text);
+  const approvalGate = /\b(human|user|operator|manager|admin)\b.{0,80}\b(approval|approve|confirm|consent|authorize)\b/i.test(text);
+  const firstTouchGate = /\b(first[-\s]?time|new|unknown|unverified|external)\b.{0,80}\b(recipient|sender|address|domain|contact|communication)\b/i.test(text);
+
+  if (emailAccess && outboundMail && sensitiveAccess) {
+    add(
+      report,
+      "high",
+      "agent-email-sensitive-exfil-risk",
+      "Agent policy combines inbox/email access, outbound mail capability, and sensitive-data access. Require identity verification and human approval before sensitive or external sends.",
+      file,
+      "Varonis/BleepingComputer OpenClaw phishing research showed this architecture can leak credentials or CRM exports under plausible urgent requests.",
+    );
+  }
+
+  if (emailAccess && outboundMail && !(identityGate && approvalGate && firstTouchGate)) {
+    add(
+      report,
+      "medium",
+      "agent-email-approval-gap",
+      "Email-capable agent policy does not clearly require sender identity verification, human approval, and first-time/external recipient gating.",
+      file,
+    );
   }
 }
 
@@ -185,7 +232,7 @@ function inspectListening(report) {
   for (const line of output.split(/\r?\n/)) {
     const localAddress = localBindAddress(line);
     if (localAddress && /^(0\.0\.0\.0|\[::\]|:::)/.test(localAddress) && /\bLISTEN(?:ING)?\b/i.test(line)) {
-      add(report, "info", "public-listener", "A TCP listener is bound to all interfaces. Confirm OpenClaw gateway/agent surfaces are not public.", null, line.trim());
+      add(report, "info", "public-listener", "A TCP listener is bound to all interfaces. Confirm OpenClaw gateway/agent surfaces are not public.", null, `local=${localAddress}`);
     }
   }
 }
