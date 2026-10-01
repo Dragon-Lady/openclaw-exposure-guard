@@ -30,6 +30,17 @@ material. It should be updated only with precise, reviewable indicators.
   simulations and recommended controls.
   <https://www.bleepingcomputer.com/news/security/openclaw-ai-agent-found-falling-for-phishing-attacks-spills-user-data/>
 
+## MemTensor supplychain.local
+
+Aikido, Socket, and SafeDep reported a compromised OpenClaw plugin,
+`@memtensor/memos-cloud-openclaw-plugin`, at and after 0.1.21, plus the PyPI
+package MemoryOS at and after 2.0.34. This guard reports the plugin name,
+versions in that range, the state directory `.openclaw/.cache/runtime`, and
+the published markers `sckit.runtime.v1`, `supplychain.local`,
+`SCKIT_EVENT_TEXT`, `.sckit`, and `cloud-openclaw-semi-nuclear`. It does not
+store the dropped program. If the plugin ran, move to host incident response.
+This guard is notify-only.
+
 ## Triage Rules
 
 - Prefer exact package names, affected ranges, fixed versions, paths, hashes,

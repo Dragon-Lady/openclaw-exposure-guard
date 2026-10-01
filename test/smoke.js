@@ -32,6 +32,19 @@ async function main() {
   assert(report.findings.some((finding) => finding.type === "agent-email-approval-gap"));
   assert.notStrictEqual(report.risk, "no-known-indicators");
 
+  const memtensor = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-memtensor-"));
+  fs.mkdirSync(path.join(memtensor, ".openclaw", ".cache", "runtime"), { recursive: true });
+  fs.writeFileSync(path.join(memtensor, "package.json"), JSON.stringify({
+    dependencies: { "@memtensor/memos-cloud-openclaw-plugin": "0.1.23" },
+  }));
+  fs.writeFileSync(path.join(memtensor, "runtime.js"), "marker sckit.runtime.v1\n");
+  fs.writeFileSync(path.join(memtensor, ".openclaw", ".cache", "runtime", "state.json"), "{}\n");
+  const memtensorReport = await scan(memtensor);
+  assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-plugin-version" && finding.message.includes("host incident response")));
+  assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-indicator"));
+  assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-runtime-path"));
+  fs.rmSync(memtensor, { recursive: true, force: true });
+
   fs.rmSync(dir, { recursive: true, force: true });
   console.log("smoke tests passed");
 }

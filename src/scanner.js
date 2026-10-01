@@ -74,7 +74,12 @@ function walk(root, report, onFile) {
   for (const entry of entries) {
     const full = path.join(root, entry.name);
     if (entry.isDirectory()) {
-      if (!IGNORE_DIRS.has(entry.name)) walk(full, report, onFile);
+      const normalizedDir = full.replace(/\\/g, "/");
+      if (normalizedDir.endsWith(".openclaw/.cache/runtime") || normalizedDir.includes(".openclaw/.cache/runtime/")) {
+        add(report, "critical", "memtensor-runtime-path", `Path matches a MemTensor runtime directory. ${MEMTENSOR_NOTE}`, full);
+      }
+      const underOpenClawState = normalizedDir.includes("/.openclaw/");
+      if (!IGNORE_DIRS.has(entry.name) || underOpenClawState) walk(full, report, onFile);
       continue;
     }
     if (!entry.isFile()) continue;
@@ -88,6 +93,7 @@ function inspectFile(file, report) {
   const lower = base.toLowerCase();
 
   if (lower === "package.json") inspectPackage(file, report);
+  inspectMemtensor(file, report);
   if (lower === ".npmrc") inspectNpmrc(file, report);
   if (CONFIG_NAMES.has(lower)) inspectConfig(file, report);
   if (AGENT_POLICY_NAMES.has(lower)) inspectAgentPolicy(file, report);
@@ -161,6 +167,8 @@ function inspectPackage(file, report) {
   if (pkg.openclaw) {
     add(report, "info", "openclaw-plugin-or-hook", "Manifest declares OpenClaw plugin/hook metadata; review package source before installing or enabling.", file);
   }
+
+  inspectMemtensorPackage(pkg, file, report);
 
   const deps = Object.assign({}, pkg.dependencies, pkg.optionalDependencies);
   for (const [name, spec] of Object.entries(deps)) {
@@ -273,6 +281,60 @@ function versionLessThan(left, right) {
     if (left[i] > parsedRight[i]) return false;
   }
   return false;
+}
+
+const MEMTENSOR_PLUGIN = "@memtensor/memos-cloud-openclaw-plugin";
+const MEMTENSOR_MIN = [0, 1, 21];
+const MEMTENSOR_NOTE = "MemTensor supplychain.local (Aikido, Socket, SafeDep): compromised at and after 0.1.21, including a package with benign history. It runs on invocation. Stop using it. If it ran, treat npm, PyPI, and GitHub tokens and this workstation as exposed and move to host incident response. Notify-only; do not blind-revoke.";
+const MEMTENSOR_STRINGS = ["sckit.runtime.v1", "supplychain.local", "SCKIT_EVENT_TEXT", ".sckit", "cloud-openclaw-semi-nuclear"];
+const MEMTENSOR_TEXT_EXTENSIONS = new Set([".js", ".cjs", ".mjs", ".json", ".md", ".txt", ".yml", ".yaml", ".toml", ".py"]);
+
+function inspectMemtensorPackage(pkg, file, report) {
+  const groups = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"];
+  for (const group of groups) {
+    const spec = pkg[group] && pkg[group][MEMTENSOR_PLUGIN];
+    if (typeof spec !== "string") continue;
+    const versions = Array.from(spec.matchAll(/(\d+)\.(\d+)\.(\d+)/g), (match) => match.slice(1).map((part) => Number.parseInt(part, 10)));
+    if (versions.length === 0) {
+      add(report, "high", "memtensor-plugin-unpinned", `${group} names ${MEMTENSOR_PLUGIN} without a dotted version. Confirm it is below 0.1.21. ${MEMTENSOR_NOTE}`, file, spec);
+      continue;
+    }
+    for (const version of versions) {
+      if (compareTriple(version, MEMTENSOR_MIN) >= 0) {
+        add(report, "critical", "memtensor-plugin-version", `${group} requests ${MEMTENSOR_PLUGIN} ${version.join(".")}, in the reported compromised range at and after 0.1.21. ${MEMTENSOR_NOTE}`, file, version.join("."));
+      }
+    }
+  }
+}
+
+function inspectMemtensor(file, report) {
+  const normalized = file.replace(/\\/g, "/");
+  if (normalized.includes(".openclaw/.cache/runtime") || /(^|\/)sckit(\.exe)?$/i.test(normalized)) {
+    add(report, "critical", "memtensor-runtime-path", `Path matches a MemTensor runtime artifact. ${MEMTENSOR_NOTE}`, file);
+  }
+
+  if (!MEMTENSOR_TEXT_EXTENSIONS.has(path.extname(file).toLowerCase())) return;
+  let text = "";
+  try {
+    const stat = fs.statSync(file);
+    if (stat.size > 1024 * 1024) return;
+    text = fs.readFileSync(file, "utf8");
+  } catch {
+    return;
+  }
+  for (const indicator of MEMTENSOR_STRINGS) {
+    if (text.includes(indicator)) {
+      add(report, "critical", "memtensor-indicator", `File references MemTensor indicator ${indicator}. ${MEMTENSOR_NOTE}`, file, indicator);
+    }
+  }
+}
+
+function compareTriple(left, right) {
+  for (let i = 0; i < 3; i += 1) {
+    if (left[i] > right[i]) return 1;
+    if (left[i] < right[i]) return -1;
+  }
+  return 0;
 }
 
 function add(report, severity, type, message, file, detail, source) {
