@@ -284,8 +284,8 @@ function versionLessThan(left, right) {
 }
 
 const MEMTENSOR_PLUGIN = "@memtensor/memos-cloud-openclaw-plugin";
-const MEMTENSOR_MIN = [0, 1, 21];
-const MEMTENSOR_NOTE = "MemTensor supplychain.local (Aikido, Socket, SafeDep): compromised at and after 0.1.21, including a package with benign history. It runs on invocation. Stop using it. If it ran, treat npm, PyPI, and GitHub tokens and this workstation as exposed and move to host incident response. Notify-only; do not blind-revoke.";
+const MEMTENSOR_BAD_VERSIONS = new Set(["0.1.21", "0.1.23", "0.1.25"]);
+const MEMTENSOR_NOTE = "MemTensor supplychain.local (Aikido, Socket, SafeDep): exact npm versions 0.1.21, 0.1.23, and 0.1.25 are malicious. 0.1.22 and 0.1.24 are clean. It runs on invocation, not install-only. Do not load this plugin. If it ran, preserve evidence and treat credentials reachable from the host or CI runner as exposed; rotate them from a clean machine. Notify-only.";
 const MEMTENSOR_STRINGS = ["sckit.runtime.v1", "supplychain.local", "SCKIT_EVENT_TEXT", ".sckit", "cloud-openclaw-semi-nuclear"];
 const MEMTENSOR_TEXT_EXTENSIONS = new Set([".js", ".cjs", ".mjs", ".json", ".md", ".txt", ".yml", ".yaml", ".toml", ".py"]);
 
@@ -296,12 +296,13 @@ function inspectMemtensorPackage(pkg, file, report) {
     if (typeof spec !== "string") continue;
     const versions = Array.from(spec.matchAll(/(\d+)\.(\d+)\.(\d+)/g), (match) => match.slice(1).map((part) => Number.parseInt(part, 10)));
     if (versions.length === 0) {
-      add(report, "high", "memtensor-plugin-unpinned", `${group} names ${MEMTENSOR_PLUGIN} without a dotted version. Confirm it is below 0.1.21. ${MEMTENSOR_NOTE}`, file, spec);
+      add(report, "high", "memtensor-plugin-unpinned", `${group} names ${MEMTENSOR_PLUGIN} without a dotted version. Only 0.1.21, 0.1.23, and 0.1.25 are reported malicious. ${MEMTENSOR_NOTE}`, file, spec);
       continue;
     }
     for (const version of versions) {
-      if (compareTriple(version, MEMTENSOR_MIN) >= 0) {
-        add(report, "critical", "memtensor-plugin-version", `${group} requests ${MEMTENSOR_PLUGIN} ${version.join(".")}, in the reported compromised range at and after 0.1.21. ${MEMTENSOR_NOTE}`, file, version.join("."));
+      const dotted = version.join(".");
+      if (MEMTENSOR_BAD_VERSIONS.has(dotted)) {
+        add(report, "critical", "memtensor-plugin-version", `${group} requests ${MEMTENSOR_PLUGIN} ${dotted}, one of the reported malicious versions 0.1.21, 0.1.23, and 0.1.25. ${MEMTENSOR_NOTE}`, file, dotted);
       }
     }
   }

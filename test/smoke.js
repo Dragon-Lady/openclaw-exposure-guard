@@ -40,10 +40,18 @@ async function main() {
   fs.writeFileSync(path.join(memtensor, "runtime.js"), "marker sckit.runtime.v1\n");
   fs.writeFileSync(path.join(memtensor, ".openclaw", ".cache", "runtime", "state.json"), "{}\n");
   const memtensorReport = await scan(memtensor);
-  assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-plugin-version" && finding.message.includes("host incident response")));
+  assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-plugin-version" && finding.message.includes("Do not load this plugin")));
   assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-indicator"));
   assert(memtensorReport.findings.some((finding) => finding.type === "memtensor-runtime-path"));
   fs.rmSync(memtensor, { recursive: true, force: true });
+
+  const memtensorClean = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-memtensor-clean-"));
+  fs.writeFileSync(path.join(memtensorClean, "package.json"), JSON.stringify({
+    dependencies: { "@memtensor/memos-cloud-openclaw-plugin": "0.1.24" },
+  }));
+  const memtensorCleanReport = await scan(memtensorClean);
+  assert(!memtensorCleanReport.findings.some((finding) => finding.type === "memtensor-plugin-version"));
+  fs.rmSync(memtensorClean, { recursive: true, force: true });
 
   fs.rmSync(dir, { recursive: true, force: true });
   console.log("smoke tests passed");

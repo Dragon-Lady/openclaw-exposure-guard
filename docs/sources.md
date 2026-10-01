@@ -32,10 +32,11 @@ material. It should be updated only with precise, reviewable indicators.
 
 ## MemTensor supplychain.local
 
-Aikido, Socket, and SafeDep reported a compromised OpenClaw plugin,
-`@memtensor/memos-cloud-openclaw-plugin`, at and after 0.1.21, plus the PyPI
-package MemoryOS at and after 2.0.34. This guard reports the plugin name,
-versions in that range, the state directory `.openclaw/.cache/runtime`, and
+Aikido, Socket, and SafeDep reported exact malicious versions of the OpenClaw
+plugin `@memtensor/memos-cloud-openclaw-plugin`: 0.1.21, 0.1.23, and 0.1.25.
+npm 0.1.22 and 0.1.24 are clean. PyPI MemoryOS 2.0.34 is the exact malicious
+Python release. This guard reports those plugin versions, the state directory
+`.openclaw/.cache/runtime`, and
 the published markers `sckit.runtime.v1`, `supplychain.local`,
 `SCKIT_EVENT_TEXT`, `.sckit`, and `cloud-openclaw-semi-nuclear`. It does not
 store the dropped program. If the plugin ran, move to host incident response.
