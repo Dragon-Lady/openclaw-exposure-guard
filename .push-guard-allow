@@ -1,0 +1,5 @@
+# Reviewed package-scan exceptions: exact file and workflow rule only.
+# The import and inspectListening() use fixed local socket-listing commands.
+# No scanner input is interpolated into those commands.
+# Secret and private-term findings remain non-allowable.
+src/scanner.js workflow.dprk_socketio_node_exec
