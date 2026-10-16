@@ -32,6 +32,22 @@ node .\bin\openclaw-exposure-guard.js --json C:\path\to\check
 
 ## What It Checks
 
+Both regular file and directory targets are supported. Missing or unsupported
+targets, unknown flags, and extra targets fail explicitly.
+
+Exit codes: 0 means no medium/high/critical findings in a completed target scan,
+1 means findings requiring review, and 2 means usage/runtime error or incomplete
+target coverage (takes precedence over 1). This intentionally replaces the
+earlier always-zero status for findings.
+
+`coverage.complete` covers selected target files and traversed directories.
+Unreadable inputs, malformed manifests, or candidates over the 1 MiB text limit
+make it false; `coverage.errors` lists paths and reasons without file contents.
+Excluded directory classes and unselected file types are outside that scope.
+The optional host listener probe is separate: `coverage.listenerInspection`
+reports `complete` or `unavailable`; an unavailable probe is not proof that no
+listeners exist. It does not change target-file coverage or the exit status.
+
 - Local `openclaw` package manifests and dependency specs.
 - Known vulnerable OpenClaw versions from public advisories.
 - OpenClaw skill or hook metadata files.

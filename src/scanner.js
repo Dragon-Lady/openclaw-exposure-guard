@@ -54,10 +54,16 @@ async function scan(target) {
     risk: "no-known-indicators",
     scannedFiles: 0,
     packageManifests: 0,
+    coverage: { complete: true, errors: [], listenerInspection: "not-run" },
     findings: [],
   };
 
-  walk(target, report, (file) => inspectFile(file, report));
+  const stat = fs.statSync(target);
+  if (stat.isFile()) {
+    report.scannedFiles += 1;
+    inspectFile(target, report);
+  } else if (stat.isDirectory()) walk(target, report, (file) => inspectFile(file, report));
+  else throw new Error("Target must be a regular file or directory");
   inspectListening(report);
   rank(report);
   return report;
@@ -68,6 +74,7 @@ function walk(root, report, onFile) {
   try {
     entries = fs.readdirSync(root, { withFileTypes: true });
   } catch {
+    incomplete(report, root, "list-error");
     return;
   }
 
@@ -106,12 +113,8 @@ function inspectFile(file, report) {
 }
 
 function inspectAgentPolicy(file, report) {
-  let text = "";
-  try {
-    text = fs.readFileSync(file, "utf8");
-  } catch {
-    return;
-  }
+  const text = readCandidate(file, report);
+  if (text === null) return;
 
   const emailAccess = /\b(gmail|google\s+workspace|inbox|email|mailbox)\b/i.test(text);
   const outboundMail = /\b(send|forward|reply|email)\b.{0,80}\b(email|mail|message|recipient|external)\b/i.test(text);
@@ -146,9 +149,13 @@ function inspectPackage(file, report) {
   report.packageManifests += 1;
 
   let pkg;
+  const text = readCandidate(file, report);
+  if (text === null) return;
   try {
-    pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+    pkg = JSON.parse(text);
+    if (!pkg || typeof pkg !== "object" || Array.isArray(pkg)) throw new Error("Invalid manifest");
   } catch {
+    incomplete(report, file, "parse-error");
     add(report, "medium", "malformed-package-json", "package.json could not be parsed.", file);
     return;
   }
@@ -198,24 +205,16 @@ function inspectVersion(version, file, report) {
 }
 
 function inspectNpmrc(file, report) {
-  let text = "";
-  try {
-    text = fs.readFileSync(file, "utf8");
-  } catch {
-    return;
-  }
+  const text = readCandidate(file, report);
+  if (text === null) return;
   if (/^\s*git\s*=/mi.test(text)) {
     add(report, "high", "npmrc-git-override", ".npmrc overrides the git executable. This is risky for local OpenClaw plugin/hook install flows.", file);
   }
 }
 
 function inspectConfig(file, report) {
-  let text = "";
-  try {
-    text = fs.readFileSync(file, "utf8");
-  } catch {
-    return;
-  }
+  const text = readCandidate(file, report);
+  if (text === null) return;
 
   if (/\b(0\.0\.0\.0|\[::\]|::)\b/.test(text)) {
     add(report, "high", "public-bind-config", "Config appears to bind a service to all interfaces.", file);
@@ -234,8 +233,10 @@ function inspectListening(report) {
   try {
     output = childProcess.execSync(command, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 3000 });
   } catch {
+    report.coverage.listenerInspection = "unavailable";
     return;
   }
+  report.coverage.listenerInspection = "complete";
 
   for (const line of output.split(/\r?\n/)) {
     const localAddress = localBindAddress(line);
@@ -315,18 +316,33 @@ function inspectMemtensor(file, report) {
   }
 
   if (!MEMTENSOR_TEXT_EXTENSIONS.has(path.extname(file).toLowerCase())) return;
-  let text = "";
-  try {
-    const stat = fs.statSync(file);
-    if (stat.size > 1024 * 1024) return;
-    text = fs.readFileSync(file, "utf8");
-  } catch {
-    return;
-  }
+  const text = readCandidate(file, report);
+  if (text === null) return;
   for (const indicator of MEMTENSOR_STRINGS) {
     if (text.includes(indicator)) {
       add(report, "critical", "memtensor-indicator", `File references MemTensor indicator ${indicator}. ${MEMTENSOR_NOTE}`, file, indicator);
     }
+  }
+}
+
+function incomplete(report, file, reason) {
+  report.coverage.complete = false;
+  if (!report.coverage.errors.some((error) => error.path === file && error.reason === reason)) {
+    report.coverage.errors.push({ path: file, reason });
+  }
+}
+
+function readCandidate(file, report) {
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile() || stat.size > 1024 * 1024) {
+      incomplete(report, file, "size-or-type-limit");
+      return null;
+    }
+    return fs.readFileSync(file, "utf8");
+  } catch {
+    incomplete(report, file, "read-error");
+    return null;
   }
 }
 
