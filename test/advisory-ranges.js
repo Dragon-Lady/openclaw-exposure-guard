@@ -42,3 +42,23 @@ for (const [version, vulnerable] of [["=2026.1.1",true],["= 2026.5.7",true],["=2
   assert(!hits.some(f=>f.type==="openclaw-version-review"));
   assert.equal(hits.some(f=>f.type==="vulnerable-openclaw-version"),vulnerable);
  });
+
+for (const [spec, severity] of [
+  ["^2026.6.0", "medium"], ["~2026.5.8", "medium"],
+  [">=2026.5.8", "medium"], [">2026.5.7", "medium"],
+  [" ^v2099.1.1 ", "medium"], ["~ 2026.5.8", "medium"],
+  [">=2026.5.7", "high"], ["^2026.5.7", "high"],
+  ["^2026.5.8 || 2026.1.1", "high"], ["2026.5.x", "high"],
+  [">=2026.5.8-beta.1", "high"], ["^2026.05.8", "high"],
+  [">=2026.5.8 <2027.0.0", "high"], ["file:../openclaw", "high"],
+  ["git+https://example.invalid/openclaw", "high"], ["latest", "high"],
+]) test("range review priority: " + spec, async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "advisory-"));
+  t.after(() => fs.rmSync(root, {recursive:true, force:true}));
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({dependencies:{openclaw:spec}}));
+  const hits = (await scan(root)).findings;
+  const review = hits.find(f => f.type === "openclaw-version-review");
+  assert.equal(review?.severity, severity);
+  assert(!hits.some(f => f.type === "vulnerable-openclaw-version"));
+  if (severity === "medium") assert.match(review.message, /above all cataloged/);
+});
