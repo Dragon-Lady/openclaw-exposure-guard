@@ -279,7 +279,7 @@ function dependencyVersion(pkg, name) {
 
 function normalizeVersion(version) {
   if (typeof version !== "string") return null;
-  const match = version.trim().match(/^(?:=\s*)?v?(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
+  const match = version.trim().match(/^(?:=\s*)?v?(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/);
   if (!match) return null;
   return match.slice(1).map((part) => Number.parseInt(part, 10));
 }
