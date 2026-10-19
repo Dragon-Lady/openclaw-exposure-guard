@@ -26,5 +26,65 @@
     "severity": "high",
     "fixedVersion": "2026.3.24",
     "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-m3mh-3mpg-37hw"
+  },
+  {
+    "id": "GHSA-cwj3-vqpp-pmxr",
+    "title": "Gateway config mutation bypass",
+    "severity": "high",
+    "fixedVersion": "2026.4.23",
+    "affectedRange": "<2026.4.23",
+    "conditions": "Model-driven gateway config writes require access to the gateway tool.",
+    "scope": "npm",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-cwj3-vqpp-pmxr"
+  },
+  {
+    "id": "GHSA-p73f-w79w-jqr5",
+    "title": "Native command owner-policy bypass",
+    "severity": "medium",
+    "fixedVersion": "2026.5.6",
+    "affectedRange": "<=2026.5.5",
+    "conditions": "Requires reachable native command handling; restrict untrusted senders.",
+    "scope": "npm",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-p73f-w79w-jqr5"
+  },
+  {
+    "id": "GHSA-j472-gf56-x589",
+    "title": "PowerShell encoded-command alias allowlist bypass",
+    "severity": "medium",
+    "fixedVersion": "2026.5.12",
+    "affectedRange": "<=2026.5.7",
+    "conditions": "Requires PowerShell execution through the affected allowlist parser.",
+    "scope": "npm",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-j472-gf56-x589"
+  },
+  {
+    "id": "GHSA-77q5-rr5v-x43q",
+    "title": "Trusted retry endpoint hostname-prefix matching",
+    "severity": "medium",
+    "fixedVersion": "2026.5.7",
+    "affectedRange": "<2026.5.7",
+    "conditions": "Review the trusted retry endpoint feature. Upstream does not list a package; this is an OpenClaw product-version review lead.",
+    "scope": "product-review",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-77q5-rr5v-x43q"
+  },
+  {
+    "id": "GHSA-w5ww-7chg-mxcq",
+    "title": "Telegram callback command-policy bypass",
+    "severity": "medium",
+    "fixedVersion": "2026.5.6",
+    "affectedRange": "<=2026.5.5",
+    "conditions": "Requires reachable Telegram interactive callbacks and command policy.",
+    "scope": "npm",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-w5ww-7chg-mxcq"
+  },
+  {
+    "id": "GHSA-7hxm-f538-3xp6",
+    "title": "Matrix allowFrom mutable display-name matching",
+    "severity": "medium",
+    "fixedVersion": "2026.5.7",
+    "affectedRange": "<=2026.5.6",
+    "conditions": "Requires Matrix integration using the affected allowFrom matching.",
+    "scope": "npm",
+    "url": "https://github.com/openclaw/openclaw/security/advisories/GHSA-7hxm-f538-3xp6"
   }
 ]
