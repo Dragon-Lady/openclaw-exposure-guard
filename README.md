@@ -81,3 +81,17 @@ If this guard reports a high-risk OpenClaw finding:
 ## Sources
 
 See [docs/sources.md](docs/sources.md).
+
+## Unreleased advisory reconciliation
+
+Six additional upstream advisories now retain their published affected ranges,
+severity and feature conditions in `data/advisories.json`. Exact stable versions
+are compared with those ranges; unresolved ranges and prereleases produce a
+version-review finding. The retry-endpoint advisory has no package specified
+upstream, so it remains a product review lead. A gap between an affected range
+and a stated patched release is not silently broadened into a new affected range.
+
+This bounded catalog update is not a complete reconciliation of all OpenClaw
+advisories, and no version is certified universally safe. Inventory does not
+establish configuration, reachability or exploitation. Each record links its
+upstream source; the six records were verified on 2026-10-19.

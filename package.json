@@ -18,7 +18,7 @@
   "scripts": {
     "scan": "node bin/openclaw-exposure-guard.js",
     "smoke": "node bin/openclaw-exposure-guard.js --help",
-    "test": "node --check bin/openclaw-exposure-guard.js && node --check src/scanner.js && node test/smoke.js && node --test test/functional-boundaries.js"
+    "test": "node --check bin/openclaw-exposure-guard.js && node --check src/scanner.js && node test/smoke.js && node --test test/functional-boundaries.js && node --test test/advisory-ranges.js"
   },
   "engines": {
     "node": ">=18"

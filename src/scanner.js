@@ -187,15 +187,21 @@ function inspectPackage(file, report) {
 
 function inspectVersion(version, file, report) {
   const parsed = normalizeVersion(version);
-  if (!parsed) return;
+  if (!parsed) {
+    add(report, "medium", "openclaw-version-review", "OpenClaw version is not an exact stable pin; resolve the installed version before applying advisory ranges.", file);
+    return;
+  }
 
   for (const advisory of advisories) {
-    if (versionLessThan(parsed, advisory.fixedVersion)) {
+    const range = advisory.affectedRange || `<${advisory.fixedVersion}`;
+    const upper = range.replace(/^<=?/, "");
+    const equal = parsed.join(".") === normalizeVersion(upper)?.join(".");
+    if (versionLessThan(parsed, upper) || (range.startsWith("<=") && equal)) {
       add(
         report,
         advisory.severity,
-        "vulnerable-openclaw-version",
-        `OpenClaw ${version} is below fixed version ${advisory.fixedVersion} for ${advisory.id}.`,
+        advisory.scope === "product-review" ? "openclaw-advisory-review" : "vulnerable-openclaw-version",
+        `OpenClaw ${version} matches published range ${range} for ${advisory.id}; patched release ${advisory.fixedVersion}. ${advisory.conditions || "Review advisory conditions."} Version inventory does not establish exploitability.`,
         file,
         advisory.title,
         advisory.url,
@@ -269,7 +275,7 @@ function dependencyVersion(pkg, name) {
 
 function normalizeVersion(version) {
   if (typeof version !== "string") return null;
-  const match = version.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
+  const match = version.match(/^v?(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
   if (!match) return null;
   return match.slice(1).map((part) => Number.parseInt(part, 10));
 }
