@@ -188,7 +188,11 @@ function inspectPackage(file, report) {
 function inspectVersion(version, file, report) {
   const parsed = normalizeVersion(version);
   if (!parsed) {
-    add(report, "high", "openclaw-version-review", "OpenClaw version is unresolved; resolve the installed stable version before applying advisory ranges. High review priority does not establish a vulnerable installation.", file);
+    const outsideKnownRanges = rangeAboveKnownAdvisories(version);
+    add(report, outsideKnownRanges ? "medium" : "high", "openclaw-version-review",
+      outsideKnownRanges
+        ? "OpenClaw dependency range is above all cataloged affected versions. Resolve the installed stable version; this does not establish safety against unlisted advisories."
+        : "OpenClaw version is unresolved; resolve the installed stable version before applying advisory ranges. High review priority does not establish a vulnerable installation.", file);
     return;
   }
 
@@ -275,9 +279,24 @@ function dependencyVersion(pkg, name) {
 
 function normalizeVersion(version) {
   if (typeof version !== "string") return null;
-  const match = version.trim().match(/^(?:=\s*)?v?(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
+  const match = version.trim().match(/^(?:=\s*)?v?(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/);
   if (!match) return null;
   return match.slice(1).map((part) => Number.parseInt(part, 10));
+}
+
+// Recognize only simple, complete stable lower bounds. Unknown syntax stays high.
+function rangeAboveKnownAdvisories(spec) {
+  if (typeof spec !== "string") return false;
+  const match = spec.trim().match(/^(\^|~|>=|>)\s*v?([1-9]\d{3}\.(?:0|[1-9]\d?)\.(?:0|[1-9]\d?))$/);
+  if (!match || advisories.length === 0) return false;
+  const lower = normalizeVersion(match[2]);
+  return advisories.every(advisory => {
+    const affected = (advisory.affectedRange || `<${advisory.fixedVersion}`).match(/^(<|<=)(\d{4}\.\d{1,2}\.\d{1,2})$/);
+    if (!affected || !normalizeVersion(affected[2])) return false;
+    if (versionLessThan(lower, affected[2])) return false;
+    const equal = lower.join(".") === normalizeVersion(affected[2]).join(".");
+    return !equal || affected[1] === "<" || match[1] === ">";
+  });
 }
 
 function versionLessThan(left, right) {

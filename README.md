@@ -96,3 +96,8 @@ This bounded catalog update is not a complete reconciliation of all OpenClaw
 advisories, and no version is certified universally safe. Inventory does not
 establish configuration, reachability or exploitation. Each record links its
 upstream source; the six records were verified on 2026-10-19.
+
+Simple complete stable dependency ranges (`^`, `~`, `>=`, `>`) whose lower bound
+is outside every cataloged affected range receive medium version-review priority.
+Overlapping, malformed, prerelease and unsupported compound specs retain high
+review priority until resolved; neither rating proves an installed vulnerability.
