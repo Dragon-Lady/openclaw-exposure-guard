@@ -87,7 +87,8 @@ See [docs/sources.md](docs/sources.md).
 Six additional upstream advisories now retain their published affected ranges,
 severity and feature conditions in `data/advisories.json`. Exact stable versions
 are compared with those ranges; unresolved ranges and prereleases produce a
-version-review finding. The retry-endpoint advisory has no package specified
+high-priority version-review finding, without asserting a vulnerable installation.
+An npm `=X.Y.Z` pin is treated as exact; ranges are not guessed or truncated. The retry-endpoint advisory has no package specified
 upstream, so it remains a product review lead. A gap between an affected range
 and a stated patched release is not silently broadened into a new affected range.
 

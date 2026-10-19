@@ -23,12 +23,22 @@ for (const [id,bad,outside] of cases) test(id + " respects published range", asy
   if(expected) assert.match(findings[0].message,/does not establish exploitability/);
  }
 });
-for(const version of ["^2026.5.5",">=2026.5.5","2026.5.7-beta.1","latest","x2026.5.5"])
+for(const version of ["^2026.1.1","~2026.1.1",">=2026.1.1","^2026.5.5",">=2026.5.5","2026.5.7-beta.1","latest","x2026.5.5"])
  test("uncertain spec stays review: " + version, async t=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),"advisory-"));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
   fs.writeFileSync(path.join(root,"package.json"),JSON.stringify({dependencies:{openclaw:version}}));
   const hits=(await scan(root)).findings;
-  assert(hits.some(f=>f.type==="openclaw-version-review"));
+  assert(hits.some(f=>f.type==="openclaw-version-review" && f.severity === "high"));
   assert(!hits.some(f=>f.type==="vulnerable-openclaw-version"));
+ });
+
+for (const [version, vulnerable] of [["=2026.1.1",true],["= 2026.5.7",true],["=2026.5.8",false]])
+ test("npm equality pin: " + version, async t => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),"advisory-"));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  fs.writeFileSync(path.join(root,"package.json"),JSON.stringify({dependencies:{openclaw:version}}));
+  const hits=(await scan(root)).findings;
+  assert(!hits.some(f=>f.type==="openclaw-version-review"));
+  assert.equal(hits.some(f=>f.type==="vulnerable-openclaw-version"),vulnerable);
  });

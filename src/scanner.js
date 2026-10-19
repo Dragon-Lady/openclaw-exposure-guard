@@ -188,7 +188,7 @@ function inspectPackage(file, report) {
 function inspectVersion(version, file, report) {
   const parsed = normalizeVersion(version);
   if (!parsed) {
-    add(report, "medium", "openclaw-version-review", "OpenClaw version is not an exact stable pin; resolve the installed version before applying advisory ranges.", file);
+    add(report, "high", "openclaw-version-review", "OpenClaw version is unresolved; resolve the installed stable version before applying advisory ranges. High review priority does not establish a vulnerable installation.", file);
     return;
   }
 
@@ -275,7 +275,7 @@ function dependencyVersion(pkg, name) {
 
 function normalizeVersion(version) {
   if (typeof version !== "string") return null;
-  const match = version.match(/^v?(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
+  const match = version.trim().match(/^(?:=\s*)?v?(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
   if (!match) return null;
   return match.slice(1).map((part) => Number.parseInt(part, 10));
 }
