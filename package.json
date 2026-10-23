@@ -1,6 +1,6 @@
 {
   "name": "openclaw-exposure-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Read-only checker for OpenClaw AI-agent server exposure, vulnerable versions, risky configs, and credential-adjacent surfaces.",
   "license": "MIT",
   "type": "commonjs",
